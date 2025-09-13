@@ -7,7 +7,7 @@ import NoteList from "@/components/NoteList/NoteList";
 import Pagination from "@/components/Pagination/Pagination";
 import { SearchBox } from "@/components/SearchBox/SearchBox";
 import { fetchNotes, FetchNotesResponse } from "@/lib/api/clientApi";
-import css from "../../(private routes)/notes/NotesPage.module.css";
+import css from "../../(private routes)/notes/[slug]/NotesPage.module.css";
 
 export default function NotesPage() {
   const router = useRouter();
