@@ -1,10 +1,11 @@
-// shared axios instance for client-side
+// lib/api/api.ts
 import axios, { AxiosError } from "axios";
 
+// Client-side & SSR API instance with cookies support
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL, // e.g., https://notehub-api.goit.study
-  withCredentials: true, // required to send cookies
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
 });
 
+// Shared error type for catching API errors
 export type ApiError = AxiosError<{ error: string }>;
-
