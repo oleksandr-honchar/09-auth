@@ -5,8 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-import css from "@/components/NotesPage/NotesPage.module.css";
+import css from "./NotesPage.module.css";
 import { fetchNotes, FetchNotesResponse } from "@/lib/api/clientApi";
 import NoteList from "@/components/NoteList/NoteList";
 import Pagination from "@/components/Pagination/Pagination";
