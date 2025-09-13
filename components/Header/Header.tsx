@@ -1,46 +1,35 @@
-// import Link from "next/link";
-// import css from "./Header.module.css";
-
-// export default function Header() {
-//   return (
-//   <header className={css.header}>
-//     <Link href="/" aria-label="Home">
-//       NoteHub
-//     </Link>
-//     <nav aria-label="Main Navigation">
-//       <ul className={css.navigation}>
-//         <li>
-//           <Link href="/">Home</Link>
-//         </li>
-//         <li>
-//           <Link href="/notes">Notes</Link>
-//         </li>
-//       </ul>
-//     </nav>
-      
-//   </header>
-//   );
-// }
-
 import Link from "next/link";
 import TagsMenu from "@/components/TagsMenu/TagsMenu";
+import AuthNavigation from "@/components/AuthNavigation/AuthNavigation";
 import css from "./Header.module.css";
 
-const tags = [
+interface Tag {
+  name: string;
+  slug: string;
+}
+
+const tags: Tag[] = [
   { name: "All notes", slug: "all" },
-  { name: "Todo", slug: "todo" },
-  { name: "Work", slug: "work" },
-  { name: "Personal", slug: "personal" },
-  { name: "Meeting", slug: "meeting" },
-  { name: "Shopping", slug: "shopping" },
+  { name: "Todo", slug: "Todo" },
+  { name: "Work", slug: "Work" },
+  { name: "Personal", slug: "Personal" },
+  { name: "Meeting", slug: "Meeting" },
+  { name: "Shopping", slug: "Shopping" },
+  { name: "Ideas", slug: "Ideas" },
+  { name: "Travel", slug: "Travel" },
+  { name: "Finance", slug: "Finance" },
+  { name: "Health", slug: "Health" },
+  { name: "Important", slug: "Important" },
 ];
 
 export default function Header() {
   return (
     <header className={css.header}>
-      <Link href="/" aria-label="Home">
-        NoteHub
-      </Link>
+      <div className={css.logo}>
+        <Link href="/" aria-label="Home">
+          NoteHub
+        </Link>
+      </div>
 
       <nav aria-label="Main Navigation">
         <ul className={css.navigation}>
@@ -49,6 +38,9 @@ export default function Header() {
           </li>
           <li>
             <TagsMenu tags={tags} />
+          </li>
+          <li>
+            <AuthNavigation />
           </li>
         </ul>
       </nav>

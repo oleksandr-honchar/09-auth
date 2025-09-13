@@ -1,5 +1,5 @@
 // app/notes/page.tsx
-import css from "./Home.module.css";
+import css from "./page.module.css";
 import { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
