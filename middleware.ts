@@ -1,44 +1,29 @@
-// middleware.ts
 import { NextResponse } from "next/server";
-import { parse } from "cookie";
+import type { NextRequest } from "next/server";
 
-const PRIVATE_ROUTES = ["/profile", "/notes"];
-const PUBLIC_ROUTES = ["/sign-in", "/sign-up"];
+export function middleware(req: NextRequest) {
+  const accessToken = req.cookies.get("accessToken")?.value;
 
-export function middleware(request: Request) {
-  const url = new URL(request.url);
-  const pathname = url.pathname;
+  const { pathname } = req.nextUrl;
 
-  // Extract cookies from headers
-  const cookieHeader = request.headers.get("cookie") ?? "";
-  const cookies = parse(cookieHeader);
-  const accessToken = cookies["accessToken"];
+  const isPrivateRoute =
+    pathname.startsWith("/profile") || pathname.startsWith("/notes");
+  const isPublicRoute =
+    pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
 
-  const isPrivateRoute = PRIVATE_ROUTES.some((route) =>
-    pathname.startsWith(route)
-  );
-  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
-    pathname.startsWith(route)
-  );
-
-  // Redirect non-authenticated users from private routes to login
-  if (!accessToken && isPrivateRoute) {
-    return NextResponse.redirect(new URL("/sign-in", url));
+  // 🔒 Якщо немає токена → редірект на логін
+  if (isPrivateRoute && !accessToken) {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
-  // Redirect authenticated users from public pages to profile
-  if (accessToken && isPublicRoute) {
-    return NextResponse.redirect(new URL("/profile", url));
+  // 🔑 Якщо є токен і користувач йде на публічний маршрут → редірект у профіль
+  if (isPublicRoute && accessToken) {
+    return NextResponse.redirect(new URL("/profile", req.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/profile/:path*",
-    "/notes/:path*",
-    "/sign-in",
-    "/sign-up",
-  ],
+  matcher: ["/profile/:path*", "/notes/:path*", "/sign-in", "/sign-up"],
 };
