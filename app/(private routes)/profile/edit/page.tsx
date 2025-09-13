@@ -3,8 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
-import css from "./ProfileEditPage.module.css";
+import css from "./EditProfilePage.module.css";
 import { useAuthStore } from "@/lib/store/authStore";
 import { updateUserProfile } from "@/lib/api/clientApi";
 
