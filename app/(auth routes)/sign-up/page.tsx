@@ -36,6 +36,8 @@ export default function SignUpPage() {
           <label htmlFor="email">Email</label>
           <input
             id="email"
+            name="email"
+            placeholder="Enter your email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -48,6 +50,8 @@ export default function SignUpPage() {
           <label htmlFor="password">Password</label>
           <input
             id="password"
+            name="password"
+            placeholder="Enter your password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

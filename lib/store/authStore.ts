@@ -8,7 +8,7 @@ type AuthStore = {
   clearAuth: () => void;
 };
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStore>()((set) => ({
   user: null,
   isAuthenticated: false,
   setUser: (user: User) => set({ user, isAuthenticated: true }),

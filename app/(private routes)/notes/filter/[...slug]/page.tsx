@@ -1,7 +1,7 @@
 // notes/[slug]/page.tsx
 import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import Notes from "./Notes.client";
-import { fetchNotes, FetchNotesResponse } from "@/lib/api/clientApi";
+import { getNotes } from "@/lib/api/serverApi";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -24,7 +24,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function FilteredNotesPage({ params }: Props) {
   const rawTag = params.slug?.[0] ?? "All";
 
-  // Check if tag is allowed
   if (!allowedTags.map((t) => t.toLowerCase()).includes(rawTag.toLowerCase())) notFound();
 
   const tag = rawTag.toLowerCase() === "all" ? "" : rawTag;
@@ -33,11 +32,11 @@ export default async function FilteredNotesPage({ params }: Props) {
 
   const queryClient = new QueryClient();
 
-  // Prefetch notes on the server
+  // Prefetch notes on the server using serverApi
   await queryClient.prefetchQuery({
     queryKey: ["notes", initialPage, "", tag],
     queryFn: () =>
-      fetchNotes({
+      getNotes({
         page: initialPage,
         perPage,
         search: undefined,

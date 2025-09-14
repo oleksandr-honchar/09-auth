@@ -1,4 +1,4 @@
-import { api, ApiError } from "./api";
+import { nextServer as api, ApiError } from "./api";
 import type { User } from "@/types/user";
 import type { Note } from "@/types/note";
 
@@ -6,24 +6,14 @@ import type { Note } from "@/types/note";
 export interface RegisterRequest { email: string; password: string }
 export interface LoginRequest { email: string; password: string }
 
-export const register = async (payload: RegisterRequest): Promise<User> => {
-  try {
-    const { data } = await api.post<User>("/auth/register", payload);
-    return data;
-  } catch (err) {
-    const error = err as ApiError;
-    throw new Error(error.response?.data?.error || "Registration failed");
-  }
+export const login = async (email: string, password: string) => {
+  const res = await api.post("/auth/login", { email, password });
+  return res.data.user; // refreshToken stored in HttpOnly cookie
 };
 
-export const login = async (payload: LoginRequest): Promise<User> => {
-  try {
-    const { data } = await api.post<User>("/auth/login", payload);
-    return data;
-  } catch (err) {
-    const error = err as ApiError;
-    throw new Error(error.response?.data?.error || "Login failed");
-  }
+export const register = async (payload: { email: string; password: string }) => {
+  const res = await api.post("/auth/register", payload);
+  return res.data.user;
 };
 
 export const logout = async (): Promise<void> => {
@@ -35,14 +25,9 @@ export const logout = async (): Promise<void> => {
   }
 };
 
-export const fetchUserProfile = async (): Promise<User> => {
-  try {
-    const { data } = await api.get<User>("/users/me");
-    return data;
-  } catch (err) {
-    const error = err as ApiError;
-    throw new Error(error.response?.data?.error || "Fetch user failed");
-  }
+export const fetchUserProfile = async () => {
+  const res = await api.get("/users/me");
+  return res.data;
 };
 
 export const updateUserProfile = async (payload: Partial<User>): Promise<User> => {
@@ -53,6 +38,11 @@ export const updateUserProfile = async (payload: Partial<User>): Promise<User> =
     const error = err as ApiError;
     throw new Error(error.response?.data?.error || "Update user failed");
   }
+};
+
+export const checkSession = async () => {
+  const res = await api.post("/auth/refresh"); // browser sends refreshToken automatically
+  return res.data; // { accessToken }
 };
 
 // -------- NOTES --------

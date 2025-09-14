@@ -1,12 +1,24 @@
-import { fetchNoteById } from "@/lib/api/clientApi";
+// app/@modal/(.)notes/[id]/page.tsx
+import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
+import NotePreview from "./NotePreview.client";
+import { getNoteById } from "@/lib/api/serverApi"; // ✅ серверний API
 import type { Metadata } from "next";
 
-type Props = {
+type PageProps = {
   params: { id: string };
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const note = await fetchNoteById(params.id);
+async function fetchNote(id: string) {
+  try {
+    return await getNoteById(id);
+  } catch {
+    return null;
+  }
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const note = await fetchNote(params.id);
+  if (!note) throw new Error("Note not found");
 
   return {
     title: note.title,
@@ -27,20 +39,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
-import NotePreview from "./NotePreview.client";
-
-type PageProps = {
-  params: { id: string };
-};
-
 export default async function NoteModalPage({ params }: PageProps) {
   const { id } = params;
   const queryClient = new QueryClient();
 
+  // ✅ використання serverApi
   await queryClient.prefetchQuery({
     queryKey: ["note", id],
-    queryFn: () => fetchNoteById(id),
+    queryFn: () => fetchNote(id),
   });
 
   return (

@@ -3,3 +3,5 @@ export interface User {
     username: string;
     avatar: string;
 };
+
+export type Tokens = { accessToken: string; refreshToken?: string };

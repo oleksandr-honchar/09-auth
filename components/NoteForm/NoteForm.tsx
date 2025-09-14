@@ -9,34 +9,32 @@ import { createNote } from "@/lib/api/clientApi";
 import type { CreateNotePayload } from "@/lib/api/clientApi";
 import type { Note } from "@/types/note";
 
-export interface NoteFormProps {
-  onAdd?: (payload: CreateNotePayload) => Promise<void> | void;
-  onCancel?: () => void;
-}
-
-export default function NoteForm({ onAdd, onCancel }: NoteFormProps) {
+export default function NoteForm() {
   const { draft, saveDraft, clearDraft } = useNoteStore();
   const router = useRouter();
   const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: (payload: CreateNotePayload) => createNote(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"], exact: false });
-    },
-  });
 
   const title = draft?.title ?? "";
   const content = draft?.content ?? "";
   const tag = (draft?.tag as CreateNotePayload["tag"]) ?? "Todo";
 
+  // ✅ Мутація з очищенням draft у onSuccess
+  const createMutation = useMutation({
+    mutationFn: (payload: CreateNotePayload) => createNote(payload),
+    onSuccess: (created: Note) => {
+      clearDraft();
+      queryClient.invalidateQueries({ queryKey: ["notes"], exact: false });
+      router.push(`/notes/${created.id}`);
+    },
+  });
+
+  const handleChange = (field: keyof CreateNotePayload, value: string) => {
+    saveDraft({ ...draft, [field]: value });
+  };
+
   const validate = () => {
-    if (title.trim().length < 3) {
-      alert("Title must be at least 3 characters long");
-      return false;
-    }
-    if (title.trim().length > 50) {
-      alert("Title must be at most 50 characters long");
+    if (title.trim().length < 3 || title.trim().length > 50) {
+      alert("Title must be 3-50 characters long");
       return false;
     }
     if (content.trim().length > 500) {
@@ -60,21 +58,7 @@ export default function NoteForm({ onAdd, onCancel }: NoteFormProps) {
       tag,
     };
 
-    try {
-      if (onAdd) {
-        await onAdd(payload);
-        clearDraft();
-        onCancel?.();
-        return;
-      }
-
-      const created: Note = await createMutation.mutateAsync(payload);
-      clearDraft();
-      router.push(`/notes/${created.id}`);
-    } catch (err) {
-      console.error("Create note failed:", err);
-      alert("Failed to create note. See console for details.");
-    }
+    createMutation.mutate(payload);
   };
 
   return (
@@ -87,7 +71,7 @@ export default function NoteForm({ onAdd, onCancel }: NoteFormProps) {
           type="text"
           placeholder="Title"
           value={title}
-          onChange={(e) => saveDraft({ title: e.target.value, content, tag })}
+          onChange={(e) => handleChange("title", e.target.value)}
           className={css.input}
           required
           minLength={3}
@@ -103,7 +87,7 @@ export default function NoteForm({ onAdd, onCancel }: NoteFormProps) {
           rows={8}
           placeholder="Content"
           value={content}
-          onChange={(e) => saveDraft({ title, content: e.target.value, tag })}
+          onChange={(e) => handleChange("content", e.target.value)}
           className={css.textarea}
           maxLength={500}
         />
@@ -115,9 +99,7 @@ export default function NoteForm({ onAdd, onCancel }: NoteFormProps) {
           id="tag"
           name="tag"
           value={tag}
-          onChange={(e) =>
-            saveDraft({ title, content, tag: e.target.value as CreateNotePayload["tag"] })
-          }
+          onChange={(e) => handleChange("tag", e.target.value as CreateNotePayload["tag"])}
           className={css.select}
           required
         >
@@ -130,11 +112,9 @@ export default function NoteForm({ onAdd, onCancel }: NoteFormProps) {
       </div>
 
       <div className={css.actions}>
-        {onCancel && (
-          <button type="button" className={css.cancelButton} onClick={onCancel}>
-            Cancel
-          </button>
-        )}
+        <button type="button" className={css.cancelButton} onClick={() => router.back()}>
+          Cancel
+        </button>
         <button type="submit" className={css.submitButton} disabled={createMutation.isPending}>
           {createMutation.isPending ? "Creating..." : "Create note"}
         </button>
