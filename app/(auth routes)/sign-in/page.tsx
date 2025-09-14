@@ -20,7 +20,7 @@ export default function SignInPage() {
     setError("");
 
     try {
-      const user: User = await login({ email, password });
+      const user: User = await login(email, password);
       setUser(user);              // ✅ встановлюємо user + isAuthenticated
       router.push("/profile");    // ✅ редірект після успішного логіну
     } catch (err) {
