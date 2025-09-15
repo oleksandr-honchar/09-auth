@@ -16,9 +16,9 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
     const validateSession = async () => {
       try {
-        await checkSession(); // клієнтський refresh
-        const user = await fetchUserProfile(); // клієнтський запит профілю
-        fetchUserProfile(); // клієнтський запит профілю
+        await checkSession();
+        const user = await fetchUserProfile(); 
+        fetchUserProfile(); 
         setUser(user);
       } catch {
         clearAuth();
