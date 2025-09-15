@@ -1,13 +1,12 @@
 import { nextServer, ApiError } from "./api";
 import type { User } from "@/types/user";
 
-// -------- AUTH --------
 export interface RegisterRequest { email: string; password: string }
 export interface LoginRequest { email: string; password: string }
 
 export const login = async (email: string, password: string): Promise<User> => {
   const res = await nextServer.post("/auth/login", { email, password });
-  return res.data.user; // refreshToken зберігається в HttpOnly cookie
+  return res.data.user; 
 };
 
 export const register = async (payload: RegisterRequest): Promise<User> => {
@@ -39,10 +38,10 @@ export const updateUserProfile = async (payload: Partial<User>): Promise<User> =
   }
 };
 
-// ✅ Перевірка сесії — GET /auth/session
+
 export const checkSession = async (): Promise<{ accessToken?: string }> => {
   try {
-    const res = await nextServer.get("/auth/session"); // GET, не POST
+    const res = await nextServer.get("/auth/session"); 
     return res.data;
   } catch (err) {
     const error = err as ApiError;

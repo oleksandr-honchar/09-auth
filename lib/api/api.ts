@@ -1,4 +1,3 @@
-// lib/api/api.ts
 import axios, { AxiosError } from "axios";
 
 export const nextServer = axios.create({
