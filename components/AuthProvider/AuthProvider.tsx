@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/store/authStore";
-import { getUserProfile, checkSession } from "@/lib/api/serverApi";
+import { fetchUserProfile, checkSession } from "@/lib/api/clientApi";
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-
   const { setUser, clearAuth } = useAuthStore();
   const [loading, setLoading] = useState(true);
 
@@ -17,17 +16,13 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
     const validateSession = async () => {
       try {
-        // 🔑 Try refreshing session if needed
-        await checkSession();
-
-        // 👤 Fetch user profile
-        const user = await getUserProfile();
+        await checkSession(); // клієнтський refresh
+        const user = await fetchUserProfile(); // клієнтський запит профілю
+        fetchUserProfile(); // клієнтський запит профілю
         setUser(user);
       } catch {
         clearAuth();
-        if (isPrivate) {
-          router.push("/sign-in");
-        }
+        if (isPrivate) router.push("/sign-in");
       } finally {
         setLoading(false);
       }
@@ -37,6 +32,5 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   }, [pathname, router, setUser, clearAuth]);
 
   if (loading) return <div>Checking session...</div>;
-
   return <>{children}</>;
 }

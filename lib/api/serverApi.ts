@@ -1,30 +1,61 @@
+"use server"
+
+import { cookies } from "next/headers";
+import type { AxiosResponse, AxiosRequestConfig } from "axios";
 import { nextServer } from "./api"; // Axios instance for server-side
 import type { User } from "@/types/user";
+import type { Note } from "@/types/note";
 
-
-// ✅ Validate / refresh session via /auth/session
-export const checkSession = async (): Promise<void> => {
+/**
+ * Build a `Cookie` header string from the current request cookies
+ */
+async function getRequestCookieHeader(): Promise<string | undefined> {
   try {
-    await nextServer.get("/auth/session"); // refreshes accessToken cookie if needed
+    // якщо TypeScript вважає cookies() async → await
+    const cookieStore = await cookies(); 
+    const all = cookieStore.getAll();
+    if (!all || all.length === 0) return undefined;
+    return all.map((c) => `${c.name}=${c.value}`).join("; ");
   } catch {
-    throw new Error("Session refresh failed");
+    return undefined;
   }
+}
+
+/**
+ * Low-level wrapper that forwards current request cookies in "Cookie" header
+ */
+async function serverGet<T>(
+  url: string,
+  config?: AxiosRequestConfig
+): Promise<T> {
+  const cookieHeader = await getRequestCookieHeader();
+  const res = await nextServer.get<T>(url, {
+    ...config,
+    headers: {
+      ...(config?.headers ?? {}),
+      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+    },
+    withCredentials: true,
+  });
+  return res.data; // ✅ always consistent
+}
+
+/**
+ * Validate / refresh session via /auth/session
+ */
+export const checkSession = async (): Promise<AxiosResponse<unknown>> => {
+  return serverGet("/auth/session");
 };
 
-// ✅ Fetch the current user profile
-export const getUserProfile = async (): Promise<User> => {
-  const res = await nextServer.get("/users/me");
-  return res.data;
-};
+/**
+ * Fetch current user profile
+ */
+export const getUserProfile = () => serverGet<User>("/users/me");
 
-// ✅ Example: get a note by ID
-export const getNoteById = async (id: string) => {
-  const res = await nextServer.get(`/notes/${id}`);
-  return res.data;
-};
+export const getNoteById = (id: string): Promise<Note> =>
+  serverGet<Note>(`/notes/${id}`);
 
-// ✅ Example: get paginated notes
-export const getNotes = async ({
+export const getNotes = ({
   page,
   perPage,
   search,
@@ -35,18 +66,14 @@ export const getNotes = async ({
   search?: string;
   tag?: string;
 }) => {
-  const res = await nextServer.get("/notes", {
-    params: { page, perPage, search, tag },
-  });
-  return res.data;
+  return serverGet("/notes", { params: { page, perPage, search, tag } });
 };
 
-// ✅ Optional helper for server components
 export const getServerMe = async (): Promise<User | null> => {
   try {
-    const res = await nextServer.get("/users/me");
-    return res.data;
+    return await serverGet<User>("/users/me");
   } catch {
     return null;
   }
 };
+

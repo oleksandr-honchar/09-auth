@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { checkSession } from "./lib/api/serverApi";
 
+interface SessionData {
+  accessToken?: string;
+  refreshToken?: string;
+}
+
 export async function middleware(req: NextRequest) {
   const accessToken = req.cookies.get("accessToken")?.value;
   const refreshToken = req.cookies.get("refreshToken")?.value;
@@ -10,21 +15,30 @@ export async function middleware(req: NextRequest) {
   const isPrivateRoute = pathname.startsWith("/profile") || pathname.startsWith("/notes");
   const isPublicRoute = pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
 
-  // If private route without any token → redirect to login
+  // 🔒 Private route without any token
   if (isPrivateRoute && !accessToken && !refreshToken) {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
-  // If public route but already authenticated → redirect to profile
+  // 🔑 Public route with accessToken
   if (isPublicRoute && accessToken) {
     return NextResponse.redirect(new URL("/profile", req.url));
   }
 
-  // If private route without accessToken but refreshToken exists → call /auth/session
+  // 🔄 Refresh session using refreshToken
   if (isPrivateRoute && !accessToken && refreshToken) {
     try {
-      await checkSession(); // refreshes cookie automatically
-      return NextResponse.next();
+      const resCheck = await checkSession() as { data: SessionData };
+      const data = resCheck.data; // { accessToken?, refreshToken? }
+
+      const res = NextResponse.next();
+      if (data?.accessToken) {
+        res.cookies.set("accessToken", data.accessToken, { httpOnly: true, secure: true, path: "/" });
+      }
+      if (data?.refreshToken) {
+        res.cookies.set("refreshToken", data.refreshToken, { httpOnly: true, secure: true, path: "/" });
+      }
+      return res;
     } catch {
       return NextResponse.redirect(new URL("/sign-in", req.url));
     }
@@ -32,7 +46,6 @@ export async function middleware(req: NextRequest) {
 
   return NextResponse.next();
 }
-
 
 export const config = {
   matcher: ["/profile/:path*", "/notes/:path*", "/sign-in", "/sign-up"],

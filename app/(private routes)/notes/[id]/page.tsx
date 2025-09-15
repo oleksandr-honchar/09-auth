@@ -2,32 +2,37 @@
 import NotePreview from "@/components/NotePreview/NotePreview";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getNoteById } from "@/lib/api/serverApi"; // ✅ серверний API
+import { getNoteById } from "@/lib/api/serverApi"; // серверне API
 import type { Note } from "@/types/note";
 
 type Props = {
   params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 };
 
+// 🔹 Асинхронна функція завантаження нотатки
 async function fetchNote(id: string): Promise<Note | null> {
   try {
-    return await getNoteById(id); // ✅ серверний виклик
+    const note: Note = await getNoteById(id); // чіткий тип Note
+    return note;
   } catch {
     return null;
   }
 }
 
+// 🔹 Генерація метаданих
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const note = await fetchNote(params.id);
-
   if (!note) notFound();
+
+  const description = note.content.slice(0, 160);
 
   return {
     title: note.title,
-    description: note.content.slice(0, 160),
+    description,
     openGraph: {
       title: note.title,
-      description: note.content.slice(0, 160),
+      description,
       url: `https://08-zustand-three-rho.vercel.app/notes/${params.id}`,
       images: [
         {
@@ -43,15 +48,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: note.title,
-      description: note.content.slice(0, 160),
+      description,
       images: ["/og-images/note.png"],
     },
   };
 }
 
+// 🔹 Серверний компонент сторінки нотатки
 export default async function NotePage({ params }: Props) {
   const note = await fetchNote(params.id);
-
   if (!note) notFound();
 
   return <NotePreview noteId={note.id} />;
