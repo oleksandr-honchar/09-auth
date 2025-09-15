@@ -1,5 +1,18 @@
 import { nextServer, ApiError } from "./api";
 import type { User } from "@/types/user";
+import type { Note } from "@/types/note";
+
+export type FetchNotesParams = {
+  search?: string;
+  tag?: string;
+  page?: number;
+  perPage?: number;
+};
+
+export type FetchNotesResponse = {
+  notes: Note[];
+  totalPages: number;
+};
 
 export interface RegisterRequest { email: string; password: string }
 export interface LoginRequest { email: string; password: string }
@@ -47,4 +60,9 @@ export const checkSession = async (): Promise<{ accessToken?: string }> => {
     const error = err as ApiError;
     throw new Error(error.response?.data?.error || "Session check failed");
   }
+};
+
+export const fetchNotes = async (params: FetchNotesParams): Promise<FetchNotesResponse> => {
+  const { data } = await nextServer.get<FetchNotesResponse>("/notes", { params });
+  return data;
 };
