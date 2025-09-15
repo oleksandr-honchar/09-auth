@@ -21,8 +21,8 @@ export default function SignUpPage() {
 
     try {
       const user: User = await register({ email, password });
-      setUser(user);            // ✅ оновлюємо Zustand
-      router.push("/profile");  // ✅ редірект на /profile
+      setUser(user);            
+      router.push("/profile");  
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     }

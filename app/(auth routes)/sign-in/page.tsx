@@ -21,8 +21,8 @@ export default function SignInPage() {
 
     try {
       const user: User = await login(email, password);
-      setUser(user);              // ✅ встановлюємо user + isAuthenticated
-      router.push("/profile");    // ✅ редірект після успішного логіну
+      setUser(user);              
+      router.push("/profile");    
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }
