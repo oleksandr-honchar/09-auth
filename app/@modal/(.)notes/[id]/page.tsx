@@ -5,7 +5,7 @@ import { getNoteById } from "@/lib/api/serverApi";
 import type { Metadata } from "next";
 
 type PageProps = {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 };
 
 async function fetchNote(id: string) {
@@ -17,7 +17,7 @@ async function fetchNote(id: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
+  const { id } = params;
   const note = await fetchNote(id);
   if (!note) throw new Error("Note not found");
 
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function NoteModalPage({ params }: PageProps) {
-  const { id } = await params; // ✅ correctly await params
+  const { id } = params; 
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({

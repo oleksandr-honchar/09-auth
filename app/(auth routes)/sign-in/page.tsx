@@ -38,6 +38,8 @@ export default function SignInPage() {
           <input
             id="email"
             type="email"
+            name="email"
+            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={css.input}
@@ -50,6 +52,9 @@ export default function SignInPage() {
           <input
             id="password"
             type="password"
+            name="password"
+            placeholder="Enter your password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={css.input}

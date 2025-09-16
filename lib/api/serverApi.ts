@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import type { AxiosRequestConfig } from "axios";
+import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import { nextServer } from "./api";
 import type { User } from "@/types/user";
 import type { Note } from "@/types/note";
@@ -12,7 +12,9 @@ export interface SessionResponse {
   refreshToken?: string;
 }
 
-// Helper: build Cookie header from request cookies
+// =========================
+// 🍪 Cookies helper
+// =========================
 async function getRequestCookieHeader(): Promise<string | undefined> {
   try {
     const cookieStore = await cookies();
@@ -24,32 +26,49 @@ async function getRequestCookieHeader(): Promise<string | undefined> {
   }
 }
 
-// Low-level GET wrapper that forwards cookies
-async function serverGet<T>(
+// =========================
+// 🌐 HTTP helpers
+// =========================
+async function withCookies<T>(
+  method: "get" | "post" | "put" | "delete",
   url: string,
-  config?: AxiosRequestConfig
-): Promise<T> {
+  options?: { data?: unknown; config?: AxiosRequestConfig }
+): Promise<AxiosResponse<T>> {
   const cookieHeader = await getRequestCookieHeader();
-  const res = await nextServer.get<T>(url, {
-    ...config,
+  return nextServer.request<T>({
+    method,
+    url,
+    data: options?.data,
+    ...options?.config,
     headers: {
-      ...(config?.headers ?? {}),
+      ...(options?.config?.headers ?? {}),
       ...(cookieHeader ? { Cookie: cookieHeader } : {}),
     },
     withCredentials: true,
   });
-  return res.data;
 }
+
+const serverGet = <T>(url: string, config?: AxiosRequestConfig) =>
+  withCookies<T>("get", url, { config });
+
+const serverPost = <T>(url: string, data: unknown, config?: AxiosRequestConfig) =>
+  withCookies<T>("post", url, { data, config });
+
+const serverPut = <T>(url: string, data: unknown, config?: AxiosRequestConfig) =>
+  withCookies<T>("put", url, { data, config });
+
+const serverDelete = <T>(url: string, config?: AxiosRequestConfig) =>
+  withCookies<T>("delete", url, { config });
 
 // =========================
 // 🔒 AUTH / SESSION
 // =========================
-export const checkSession = async (): Promise<SessionResponse> => {
-  return serverGet<SessionResponse>("/auth/session");
-};
+export const checkSession = async (): Promise<AxiosResponse<SessionResponse>> =>
+  serverGet<SessionResponse>("/auth/session");
 
 export const getUserProfile = async (): Promise<User> => {
-  return serverGet<User>("/users/me");
+  const res = await serverGet<User>("/users/me");
+  return res.data;
 };
 
 export const getServerMe = async (): Promise<User | null> => {
@@ -64,9 +83,25 @@ export const getServerMe = async (): Promise<User | null> => {
 // 📝 NOTES
 // =========================
 export const getNoteById = async (id: string): Promise<Note> => {
-  return serverGet<Note>(`/notes/${id}`);
+  const res = await serverGet<Note>(`/notes/${id}`);
+  return res.data;
 };
 
+export const createNote = async (payload: Note): Promise<Note> => {
+  const res = await serverPost<Note>("/notes", payload);
+  return res.data;
+};
+
+export const updateNote = async (id: string, payload: Note): Promise<Note> => {
+  const res = await serverPut<Note>(`/notes/${id}`, payload);
+  return res.data;
+};
+
+export const deleteNote = async (id: string): Promise<void> => {
+  await serverDelete(`/notes/${id}`);
+};
+
+// List notes with pagination, search & tags
 export interface GetNotesParams {
   page: number;
   perPage: number;
@@ -85,7 +120,8 @@ export const getNotes = async ({
   search,
   tag,
 }: GetNotesParams): Promise<GetNotesResponse> => {
-  return serverGet<GetNotesResponse>("/notes", {
+  const res = await serverGet<GetNotesResponse>("/notes", {
     params: { page, perPage, search, tag },
   });
+  return res.data;
 };
