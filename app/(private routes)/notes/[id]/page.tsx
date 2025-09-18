@@ -2,27 +2,27 @@
 import NotePreview from "@/components/NotePreview/NotePreview";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getNoteById } from "@/lib/api/serverApi"; // серверне API
+import { getNoteById } from "@/lib/api/serverApi"; 
 import type { Note } from "@/types/note";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   searchParams?: { [key: string]: string | string[] | undefined };
 };
 
-// 🔹 Асинхронна функція завантаження нотатки
+
 async function fetchNote(id: string): Promise<Note | null> {
   try {
-    const note: Note = await getNoteById(id); // чіткий тип Note
-    return note;
+    return await getNoteById(id); 
   } catch {
     return null;
   }
 }
 
-// 🔹 Генерація метаданих
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const note = await fetchNote(params.id);
+  const { id } = await params; 
+  const note = await fetchNote(id);
   if (!note) notFound();
 
   const description = note.content.slice(0, 160);
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: note.title,
       description,
-      url: `https://08-zustand-three-rho.vercel.app/notes/${params.id}`,
+      url: `https://08-zustand-three-rho.vercel.app/notes/${id}`, // ✅ використовуємо id після await
       images: [
         {
           url: "/og-images/note.png",
@@ -54,9 +54,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// 🔹 Серверний компонент сторінки нотатки
 export default async function NotePage({ params }: Props) {
-  const note = await fetchNote(params.id);
+  const { id } = await params; 
+  const note = await fetchNote(id);
   if (!note) notFound();
 
   return <NotePreview noteId={note.id} />;

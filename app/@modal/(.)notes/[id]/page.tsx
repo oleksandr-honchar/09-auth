@@ -5,7 +5,7 @@ import { getNoteById } from "@/lib/api/serverApi";
 import type { Metadata } from "next";
 
 type PageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 async function fetchNote(id: string) {
@@ -17,7 +17,7 @@ async function fetchNote(id: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = params;
+  const { id } = await params; 
   const note = await fetchNote(id);
   if (!note) throw new Error("Note not found");
 
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: note.title,
       description: note.content.slice(0, 160),
-      url: `/notes/${id}`,
+      url: `/notes/${id}`, 
       images: [
         {
           url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function NoteModalPage({ params }: PageProps) {
-  const { id } = params; 
+  const { id } = await params; 
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
